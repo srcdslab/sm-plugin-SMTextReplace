@@ -1,7 +1,9 @@
 #include <sourcemod>
+#include <multicolors>
+
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #define MAXTEXTCOLORS 100
 
@@ -88,8 +90,12 @@ public Action:TextMsg(UserMsg:msg_id, Handle:bf, const players[], playersNum, bo
 		if(reliable)
 		{
 			new String:buffer[256];
-			BfReadString(bf, buffer, sizeof(buffer));
-			if(StrContains(buffer, "\x03[SM]") == 0)
+			if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available && GetUserMessageType() == UM_Protobuf)
+				PbReadString(bf, "params", buffer, sizeof(buffer), 0);
+			else
+				BfReadString(bf, buffer, sizeof(buffer));
+
+			if(StrContains(buffer, "\x03[SM]") == 0 || StrContains(buffer, "\x01[SM]") == 0 || StrContains(buffer, "[SM]") == 0)
 			{
 				new Handle:pack;
 				CreateDataTimer(0.0, timer_strip, pack);
@@ -134,11 +140,28 @@ public Action:timer_strip(Handle:timer, Handle:pack)
 	if(UseRandomColors == 1) ColorChoose = GetRandomInt(0, CountColors);
 	Format(QuickFormat, sizeof(QuickFormat), "%s", TextColors[ColorChoose]);
 	ReplaceStringEx(buffer, sizeof(buffer), "[SM]", QuickFormat);
-	
-	new Handle:bf = StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS);
-	//BfWriteString(bf, buffer);
-	BfWriteByte(bf, -1);
-	BfWriteByte(bf, true);
-	BfWriteString(bf, buffer);
-	EndMessage();
+
+	CFormatColor(buffer, sizeof(buffer), -1);
+	MC_AddWhiteSpace(buffer, sizeof(buffer));
+
+	Handle SayText2 = StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE | USERMSG_BLOCKHOOKS);
+
+	if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available && GetUserMessageType() == UM_Protobuf)
+	{
+		PbSetInt(SayText2, "ent_idx", -1);
+		PbSetBool(SayText2, "chat", true);
+		PbSetString(SayText2, "msg_name", buffer);
+		PbAddString(SayText2, "params", "");
+		PbAddString(SayText2, "params", "");
+		PbAddString(SayText2, "params", "");
+		PbAddString(SayText2, "params", "");
+		EndMessage();
+	}
+	else
+	{
+		BfWriteByte(SayText2, -1);
+		BfWriteByte(SayText2, true);
+		BfWriteString(SayText2, buffer);
+		EndMessage();
+	}
 }
