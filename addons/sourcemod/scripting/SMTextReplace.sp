@@ -3,8 +3,6 @@
 
 #pragma semicolon 1
 
-#define PLUGIN_VERSION "1.1"
-
 #define MAXTEXTCOLORS 100
 
 public Plugin:myinfo =
@@ -12,7 +10,7 @@ public Plugin:myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = PLUGIN_VERSION,
+	version = "1.1.0",
 	url = ""
 };
 
@@ -25,13 +23,16 @@ new String:TextColors[MAXTEXTCOLORS][256];
 public OnPluginStart()
 {
 	cvar_randomcolor = CreateConVar( "sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default" );
-	AutoExecConfig(true);
 	HookConVarChange(cvar_randomcolor, Event_CvarChange);
-	CreateConVar("sm_textreplacer_version", PLUGIN_VERSION, "text replacer version", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
+
 	RegAdminCmd("sm_reloadstc", Command_ReloadConfig, ADMFLAG_CONFIG, "Reloads Text color's config file");
+
 	HookUserMessage(GetUserMessageId("TextMsg"), TextMsg, true);
+
+	AutoExecConfig(true);
 }
-public Action:Command_ReloadConfig(client, args)
+
+public Action Command_ReloadConfig(client, args)
 {
 	RefreshConfig();
 	LogAction(client, -1, "Reloaded [SM] Text replacer config file");
@@ -142,7 +143,7 @@ public Action:timer_strip(Handle:timer, Handle:pack)
 	ReplaceStringEx(buffer, sizeof(buffer), "[SM]", QuickFormat);
 
 	CFormatColor(buffer, sizeof(buffer), -1);
-	MC_AddWhiteSpace(buffer, sizeof(buffer));
+	CAddWhiteSpace(buffer, sizeof(buffer));
 
 	Handle SayText2 = StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE | USERMSG_BLOCKHOOKS);
 
