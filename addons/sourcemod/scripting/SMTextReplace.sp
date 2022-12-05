@@ -15,7 +15,7 @@ public Plugin myinfo =
 	url = ""
 };
 
-Handle cvar_randomcolor = INVALID_HANDLE;
+Handle g_Cvar_Randomcolor = INVALID_HANDLE;
 int UseRandomColors = 0;
 int CountColors = 0;
 
@@ -23,19 +23,31 @@ char TextColors[MAXTEXTCOLORS][256];
 
 public void OnPluginStart()
 {
-	cvar_randomcolor = CreateConVar( "sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default" );
-	HookConVarChange(cvar_randomcolor, OnConVarChanged);
+	g_Cvar_Randomcolor = CreateConVar( "sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default");
+
 	RegAdminCmd("sm_reloadstc", Command_ReloadConfig, ADMFLAG_CONFIG, "Reloads Text color's config file");
+	RegAdminCmd("sm_test_stc", Command_Test, ADMFLAG_CONFIG, "Print a text with default [SM] in it.");
 
 	HookUserMessage(GetUserMessageId("TextMsg"), TextMsg, true);
+	HookConVarChange(g_Cvar_Randomcolor, OnConVarChanged);
 
 	AutoExecConfig(true);
 }
+
 public Action Command_ReloadConfig(int client, int args)
 {
 	RefreshConfig();
 	LogAction(client, -1, "Reloaded [SM] Text replacer config file");
 	ReplyToCommand(client, "[STC] Reloaded config file.");
+	return Plugin_Handled;
+}
+
+public Action Command_Test(int client, int args)
+{
+	if (client < 1)
+		ReplyToCommand(client, "[STC] Can't see the display results from the server console.");
+	else
+		PrintToChat(client, "[SM] If you see prefix colored. That works!");
 	return Plugin_Handled;
 }
 
@@ -52,17 +64,21 @@ public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] n
 stock void RefreshConfig()
 {
 	UseRandomColors = GetConVarInt(cvar_randomcolor);
+
 	for (int X = 0; X < MAXTEXTCOLORS; X++)
 	{
 		//Format(TextColors[X], sizeof(TextColors), "");
 		TextColors[X] = "";
 	}
+
 	char sPaths[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPaths, sizeof(sPaths),"configs/sm_textcolors.cfg");
 	Handle hFile = OpenFile(sPaths, "r");
+
+	//int len;
 	char sBuffer[256]; 
-	//new len;
 	CountColors = -1;
+	
 	while (ReadFileLine(hFile, sBuffer, sizeof(sBuffer)))
 	{
 		/*len = strlen(sBuffer);
