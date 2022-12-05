@@ -2,37 +2,39 @@
 #include <multicolors>
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define MAXTEXTCOLORS 100
 
-public Plugin:myinfo =
+public Plugin myinfo =
 {
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.1.0",
+	version = "1.2",
 	url = ""
 };
 
-new Handle:cvar_randomcolor = INVALID_HANDLE;
-new UseRandomColors = 0;
-new CountColors = 0;
+Handle g_Cvar_Randomcolor = INVALID_HANDLE;
+int UseRandomColors = 0;
+int CountColors = 0;
 
-new String:TextColors[MAXTEXTCOLORS][256];
+char TextColors[MAXTEXTCOLORS][256];
 
-public OnPluginStart()
+public void OnPluginStart()
 {
-	cvar_randomcolor = CreateConVar( "sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default" );
-	HookConVarChange(cvar_randomcolor, Event_CvarChange);
+	g_Cvar_Randomcolor = CreateConVar( "sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default");
 
 	RegAdminCmd("sm_reloadstc", Command_ReloadConfig, ADMFLAG_CONFIG, "Reloads Text color's config file");
+	RegAdminCmd("sm_test_stc", Command_Test, ADMFLAG_CONFIG, "Print a text with default [SM] in it.");
 
 	HookUserMessage(GetUserMessageId("TextMsg"), TextMsg, true);
+	HookConVarChange(g_Cvar_Randomcolor, OnConVarChanged);
 
 	AutoExecConfig(true);
 }
 
-public Action Command_ReloadConfig(client, args)
+public Action Command_ReloadConfig(int client, int args)
 {
 	RefreshConfig();
 	LogAction(client, -1, "Reloaded [SM] Text replacer config file");
@@ -40,30 +42,43 @@ public Action Command_ReloadConfig(client, args)
 	return Plugin_Handled;
 }
 
-public OnConfigsExecuted()
+public Action Command_Test(int client, int args)
+{
+	if (client < 1)
+		ReplyToCommand(client, "[STC] Can't see the display results from the server console.");
+	else
+		PrintToChat(client, "[SM] If you see prefix colored. That works!");
+	return Plugin_Handled;
+}
+
+public void OnConfigsExecuted()
 {
 	RefreshConfig();
 }
 
-public Event_CvarChange(Handle:convar, const String:oldValue[], const String:newValue[])
+public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
 	RefreshConfig();
 }
 
-stock RefreshConfig()
+stock void RefreshConfig()
 {
-	UseRandomColors = GetConVarInt(cvar_randomcolor);
-	for (new X = 0; X < MAXTEXTCOLORS; X++)
+	UseRandomColors = GetConVarInt(g_Cvar_Randomcolor);
+
+	for (int X = 0; X < MAXTEXTCOLORS; X++)
 	{
 		//Format(TextColors[X], sizeof(TextColors), "");
 		TextColors[X] = "";
 	}
-	decl String:sPaths[PLATFORM_MAX_PATH];
+
+	char sPaths[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPaths, sizeof(sPaths),"configs/sm_textcolors.cfg");
-	new Handle:hFile = OpenFile(sPaths, "r");
-	new String:sBuffer[256]; 
-	//new len;
+	Handle hFile = OpenFile(sPaths, "r");
+
+	//int len;
+	char sBuffer[256]; 
 	CountColors = -1;
+
 	while (ReadFileLine(hFile, sBuffer, sizeof(sBuffer)))
 	{
 		/*len = strlen(sBuffer);
@@ -84,13 +99,13 @@ stock RefreshConfig()
 	CloseHandle(hFile);
 }
 
-public Action:TextMsg(UserMsg:msg_id, Handle:bf, const players[], playersNum, bool:reliable, bool:init)
+public Action TextMsg(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
 {
 	if(CountColors != -1)
 	{
 		if(reliable)
 		{
-			new String:buffer[256];
+			char buffer[256];
 			if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available && GetUserMessageType() == UM_Protobuf)
 				PbReadString(bf, "params", buffer, sizeof(buffer), 0);
 			else
@@ -98,11 +113,11 @@ public Action:TextMsg(UserMsg:msg_id, Handle:bf, const players[], playersNum, bo
 
 			if(StrContains(buffer, "\x03[SM]") == 0 || StrContains(buffer, "\x01[SM]") == 0 || StrContains(buffer, "[SM]") == 0)
 			{
-				new Handle:pack;
+				Handle pack;
 				CreateDataTimer(0.0, timer_strip, pack);
 
 				WritePackCell(pack, playersNum);
-				for(new i = 0; i < playersNum; i++)
+				for(int i = 0; i < playersNum; i++)
 				{
 					WritePackCell(pack, players[i]);
 				}
@@ -115,13 +130,13 @@ public Action:TextMsg(UserMsg:msg_id, Handle:bf, const players[], playersNum, bo
 	return Plugin_Continue;
 }
 
-public Action:timer_strip(Handle:timer, Handle:pack)
+public Action timer_strip(Handle timer, Handle pack)
 {
-	new playersNum = ReadPackCell(pack);
-	new players[playersNum];
-	new client, count;
+	int playersNum = ReadPackCell(pack);
+	int[] players = new int[playersNum];
+	int client, count;
 
-	for(new i = 0; i < playersNum; i++)
+	for(int i = 0; i < playersNum; i++)
 	{
 		client = ReadPackCell(pack);
 		if(IsClientInGame(client))
@@ -130,14 +145,14 @@ public Action:timer_strip(Handle:timer, Handle:pack)
 		}
 	}
 
-	if(count < 1) return;
+	if(count < 1) return Plugin_Handled;
 	
 	playersNum = count;
 	
-	new String:buffer[255];
+	char buffer[255];
 	ReadPackString(pack, buffer, sizeof(buffer));
-	new String:QuickFormat[255];
-	new ColorChoose = 0;
+	char QuickFormat[255];
+	int ColorChoose = 0;
 	if(UseRandomColors == 1) ColorChoose = GetRandomInt(0, CountColors);
 	Format(QuickFormat, sizeof(QuickFormat), "%s", TextColors[ColorChoose]);
 	ReplaceStringEx(buffer, sizeof(buffer), "[SM]", QuickFormat);
@@ -165,4 +180,6 @@ public Action:timer_strip(Handle:timer, Handle:pack)
 		BfWriteString(SayText2, buffer);
 		EndMessage();
 	}
+
+	return Plugin_Continue;
 }
