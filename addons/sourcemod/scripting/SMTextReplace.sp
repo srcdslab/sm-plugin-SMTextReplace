@@ -63,7 +63,7 @@ public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] n
 
 stock void RefreshConfig()
 {
-	UseRandomColors = GetConVarInt(cvar_randomcolor);
+	UseRandomColors = GetConVarInt(g_Cvar_Randomcolor);
 
 	for (int X = 0; X < MAXTEXTCOLORS; X++)
 	{
