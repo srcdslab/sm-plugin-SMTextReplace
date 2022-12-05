@@ -78,7 +78,7 @@ stock void RefreshConfig()
 	//int len;
 	char sBuffer[256]; 
 	CountColors = -1;
-	
+
 	while (ReadFileLine(hFile, sBuffer, sizeof(sBuffer)))
 	{
 		/*len = strlen(sBuffer);
@@ -145,7 +145,7 @@ public Action timer_strip(Handle timer, Handle pack)
 		}
 	}
 
-	if(count < 1) return;
+	if(count < 1) return Plugin_Handled;
 	
 	playersNum = count;
 	
@@ -180,4 +180,6 @@ public Action timer_strip(Handle timer, Handle pack)
 		BfWriteString(SayText2, buffer);
 		EndMessage();
 	}
+
+	return Plugin_Continue;
 }
