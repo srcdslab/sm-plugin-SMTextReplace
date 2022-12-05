@@ -99,7 +99,7 @@ stock void RefreshConfig()
 	CloseHandle(hFile);
 }
 
-public Action TextMsg(UserMsg msg_id, Handle bf, const char[] players, int playersNum, bool reliable, bool init)
+public Action TextMsg(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
 {
 	if(CountColors != -1)
 	{
