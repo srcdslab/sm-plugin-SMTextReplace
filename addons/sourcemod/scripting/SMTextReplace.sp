@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2",
+	version = "1.2.1",
 	url = ""
 };
 
@@ -158,7 +158,6 @@ public Action timer_strip(Handle timer, Handle pack)
 	ReplaceStringEx(buffer, sizeof(buffer), "[SM]", QuickFormat);
 
 	CFormatColor(buffer, sizeof(buffer), -1);
-	CAddWhiteSpace(buffer, sizeof(buffer));
 
 	Handle SayText2 = StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE | USERMSG_BLOCKHOOKS);
 
