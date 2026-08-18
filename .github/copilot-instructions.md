@@ -15,16 +15,16 @@ This repository contains **SMTextReplace**, a SourceMod plugin that enhances the
 
 ### Language & Platform
 - **Language**: SourcePawn (.sp files)
-- **Platform**: SourceMod 1.11+ (defined in sourceknight.yaml)
-- **Compiler**: SourceMod compiler (spcomp) via SourceKnight
+- **Platform**: SourceMod 1.12.x
+- **Compiler**: SourceMod compiler (spcomp) via GitHub Actions (rumblefrog/setup-sp)
 - **Target**: Source Engine game servers
 
 ### Dependencies
-- **SourceMod**: Core framework (v1.11.0-git6917+)
+- **SourceMod**: Core framework (1.12.x)
 - **MultiColors**: Color formatting library (from srcdslab/sm-plugin-MultiColors)
 
 ### Build System
-- **Primary**: SourceKnight build system (configured in `sourceknight.yaml`)
+- **Primary**: Native GitHub Actions workflow (`.github/workflows/ci.yml`)
 - **CI/CD**: GitHub Actions (`.github/workflows/ci.yml`)
 - **Package Output**: Compiled plugins go to `/addons/sourcemod/plugins`
 
@@ -38,7 +38,6 @@ This repository contains **SMTextReplace**, a SourceMod plugin that enhances the
 │       └── sm_textcolors.cfg         # Color configuration file
 ├── .github/
 │   └── workflows/ci.yml              # Build and release automation
-├── sourceknight.yaml                # Build configuration
 └── .gitignore                       # Version control exclusions
 ```
 
@@ -128,15 +127,7 @@ RegAdminCmd("sm_newcommand", Command_NewFeature, ADMFLAG_CONFIG, "Description");
 ## Build & Testing Process
 
 ### Local Development
-```bash
-# Install SourceKnight (if not installed)
-pip install sourceknight
-
-# Build the plugin
-sourceknight build
-
-# Output will be in .sourceknight/package/
-```
+Compilation is handled by the GitHub Actions CI workflow (`.github/workflows/ci.yml`), which uses `rumblefrog/setup-sp` to install SourcePawn compiler 1.12.x and compiles `SMTextReplace.sp` with the `MultiColors` include. To build locally, install `spcomp` matching that version, place the `MultiColors` include under `addons/sourcemod/scripting/include`, and run `spcomp -i include -o ../plugins/SMTextReplace.smx SMTextReplace.sp` from `addons/sourcemod/scripting`.
 
 ### Testing Checklist
 1. **Compilation**: Ensure plugin compiles without warnings
