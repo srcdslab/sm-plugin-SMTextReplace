@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2.1",
+	version = "1.2.2",
 	url = ""
 };
 
@@ -83,7 +83,6 @@ stock void RefreshConfig()
 		return;
 	}
 
-	//int len;
 	char sBuffer[256];
 
 	while (ReadFileLine(hFile, sBuffer, sizeof(sBuffer)))
