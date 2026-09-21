@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2.1",
+	version = "1.2.2",
 	url = ""
 };
 
@@ -75,9 +75,15 @@ stock void RefreshConfig()
 	BuildPath(Path_SM, sPaths, sizeof(sPaths),"configs/sm_textcolors.cfg");
 	Handle hFile = OpenFile(sPaths, "r");
 
-	//int len;
-	char sBuffer[256]; 
 	CountColors = -1;
+
+	if (hFile == null)
+	{
+		LogError("[STC] Could not open %s", sPaths);
+		return;
+	}
+
+	char sBuffer[256];
 
 	while (ReadFileLine(hFile, sBuffer, sizeof(sBuffer)))
 	{
@@ -88,7 +94,13 @@ stock void RefreshConfig()
 		TrimString(sBuffer);
 
 		if(!StrEqual(sBuffer,"",false)){
-			
+
+			if (CountColors + 1 >= MAXTEXTCOLORS)
+			{
+				LogError("[STC] %s has more than %d colors defined, ignoring the rest", sPaths, MAXTEXTCOLORS);
+				break;
+			}
+
 			ReplaceString(sBuffer, sizeof(sBuffer), "*", "\x08");
 			ReplaceString(sBuffer, sizeof(sBuffer), "&", "\x07");
 			CountColors++;
