@@ -11,11 +11,11 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2.2",
+	version = "1.2.3",
 	url = ""
 };
 
-Handle g_Cvar_Randomcolor = INVALID_HANDLE;
+ConVar g_cvRandomColor;
 int UseRandomColors = 0;
 int CountColors = 0;
 
@@ -23,13 +23,13 @@ char TextColors[MAXTEXTCOLORS][256];
 
 public void OnPluginStart()
 {
-	g_Cvar_Randomcolor = CreateConVar( "sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default");
+	g_cvRandomColor = CreateConVar("sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default");
 
 	RegAdminCmd("sm_reloadstc", Command_ReloadConfig, ADMFLAG_CONFIG, "Reloads Text color's config file");
 	RegAdminCmd("sm_test_stc", Command_Test, ADMFLAG_CONFIG, "Print a text with default [SM] in it.");
 
 	HookUserMessage(GetUserMessageId("TextMsg"), TextMsg, true);
-	HookConVarChange(g_Cvar_Randomcolor, OnConVarChanged);
+	g_cvRandomColor.AddChangeHook(OnConVarChanged);
 
 	AutoExecConfig(true);
 }
@@ -63,17 +63,16 @@ public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] n
 
 stock void RefreshConfig()
 {
-	UseRandomColors = GetConVarInt(g_Cvar_Randomcolor);
+	UseRandomColors = g_cvRandomColor.IntValue;
 
 	for (int X = 0; X < MAXTEXTCOLORS; X++)
 	{
-		//Format(TextColors[X], sizeof(TextColors), "");
-		TextColors[X] = "";
+		TextColors[X][0] = '\0';
 	}
 
 	char sPaths[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, sPaths, sizeof(sPaths),"configs/sm_textcolors.cfg");
-	Handle hFile = OpenFile(sPaths, "r");
+	BuildPath(Path_SM, sPaths, sizeof(sPaths), "configs/sm_textcolors.cfg");
+	File hFile = OpenFile(sPaths, "r");
 
 	CountColors = -1;
 
@@ -85,16 +84,12 @@ stock void RefreshConfig()
 
 	char sBuffer[256];
 
-	while (ReadFileLine(hFile, sBuffer, sizeof(sBuffer)))
+	while (hFile.ReadLine(sBuffer, sizeof(sBuffer)))
 	{
-		/*len = strlen(sBuffer);
-		if (sBuffer[len-1] == '\n')
-			sBuffer[--len] = '\0';*/
-
 		TrimString(sBuffer);
 
-		if(!StrEqual(sBuffer,"",false)){
-
+		if (sBuffer[0] != '\0')
+		{
 			if (CountColors + 1 >= MAXTEXTCOLORS)
 			{
 				LogError("[STC] %s has more than %d colors defined, ignoring the rest", sPaths, MAXTEXTCOLORS);
@@ -104,93 +99,96 @@ stock void RefreshConfig()
 			ReplaceString(sBuffer, sizeof(sBuffer), "*", "\x08");
 			ReplaceString(sBuffer, sizeof(sBuffer), "&", "\x07");
 			CountColors++;
-			Format(TextColors[CountColors], sizeof(TextColors), "%s", sBuffer);
+			strcopy(TextColors[CountColors], sizeof(TextColors[]), sBuffer);
 			PrintToChatAll("\x01%s", sBuffer);
 		}
 	}
-	CloseHandle(hFile);
+	delete hFile;
 }
 
 public Action TextMsg(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
 {
-	if(CountColors != -1)
+	if (CountColors == -1 || !reliable)
+		return Plugin_Continue;
+
+	char buffer[256];
+	if (GetUserMessageType() == UM_Protobuf)
+		view_as<Protobuf>(bf).ReadString("params", buffer, sizeof(buffer), 0);
+	else
+		view_as<BfRead>(bf).ReadString(buffer, sizeof(buffer));
+
+	if (StrContains(buffer, "\x03[SM]") == 0 || StrContains(buffer, "\x01[SM]") == 0 || StrContains(buffer, "[SM]") == 0)
 	{
-		if(reliable)
+		DataPack pack;
+		CreateDataTimer(0.0, timer_strip, pack);
+
+		pack.WriteCell(playersNum);
+		for (int i = 0; i < playersNum; i++)
 		{
-			char buffer[256];
-			if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available && GetUserMessageType() == UM_Protobuf)
-				PbReadString(bf, "params", buffer, sizeof(buffer), 0);
-			else
-				BfReadString(bf, buffer, sizeof(buffer));
-
-			if(StrContains(buffer, "\x03[SM]") == 0 || StrContains(buffer, "\x01[SM]") == 0 || StrContains(buffer, "[SM]") == 0)
-			{
-				Handle pack;
-				CreateDataTimer(0.0, timer_strip, pack);
-
-				WritePackCell(pack, playersNum);
-				for(int i = 0; i < playersNum; i++)
-				{
-					WritePackCell(pack, players[i]);
-				}
-				WritePackString(pack, buffer);
-				ResetPack(pack);
-				return Plugin_Handled;
-			}
+			pack.WriteCell(GetClientUserId(players[i]));
 		}
+		pack.WriteString(buffer);
+		pack.Reset();
+		return Plugin_Handled;
 	}
+
 	return Plugin_Continue;
 }
 
-public Action timer_strip(Handle timer, Handle pack)
+public Action timer_strip(Handle timer, DataPack pack)
 {
-	int playersNum = ReadPackCell(pack);
+	int playersNum = pack.ReadCell();
 	int[] players = new int[playersNum];
 	int client, count;
 
-	for(int i = 0; i < playersNum; i++)
+	for (int i = 0; i < playersNum; i++)
 	{
-		client = ReadPackCell(pack);
-		if(IsClientInGame(client))
+		client = GetClientOfUserId(pack.ReadCell());
+		if (client && IsClientInGame(client))
 		{
 			players[count++] = client;
 		}
 	}
 
-	if(count < 1) return Plugin_Handled;
-	
+	if (count < 1)
+		return Plugin_Stop;
+
 	playersNum = count;
-	
-	char buffer[255];
-	ReadPackString(pack, buffer, sizeof(buffer));
-	char QuickFormat[255];
+
+	char buffer[256];
+	pack.ReadString(buffer, sizeof(buffer));
+
 	int ColorChoose = 0;
-	if(UseRandomColors == 1) ColorChoose = GetRandomInt(0, CountColors);
-	Format(QuickFormat, sizeof(QuickFormat), "%s", TextColors[ColorChoose]);
-	ReplaceStringEx(buffer, sizeof(buffer), "[SM]", QuickFormat);
+	if (UseRandomColors == 1)
+		ColorChoose = GetRandomInt(0, CountColors);
+
+	ReplaceStringEx(buffer, sizeof(buffer), "[SM]", TextColors[ColorChoose]);
 
 	CFormatColor(buffer, sizeof(buffer), -1);
 
 	Handle SayText2 = StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE | USERMSG_BLOCKHOOKS);
+	if (SayText2 == null)
+		return Plugin_Stop;
 
-	if (CanTestFeatures() && GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available && GetUserMessageType() == UM_Protobuf)
+	if (GetUserMessageType() == UM_Protobuf)
 	{
-		PbSetInt(SayText2, "ent_idx", -1);
-		PbSetBool(SayText2, "chat", true);
-		PbSetString(SayText2, "msg_name", buffer);
-		PbAddString(SayText2, "params", "");
-		PbAddString(SayText2, "params", "");
-		PbAddString(SayText2, "params", "");
-		PbAddString(SayText2, "params", "");
-		EndMessage();
+		Protobuf pb = UserMessageToProtobuf(SayText2);
+		pb.SetInt("ent_idx", -1);
+		pb.SetBool("chat", true);
+		pb.SetString("msg_name", buffer);
+		pb.AddString("params", "");
+		pb.AddString("params", "");
+		pb.AddString("params", "");
+		pb.AddString("params", "");
 	}
 	else
 	{
-		BfWriteByte(SayText2, -1);
-		BfWriteByte(SayText2, true);
-		BfWriteString(SayText2, buffer);
-		EndMessage();
+		BfWrite bfw = UserMessageToBfWrite(SayText2);
+		bfw.WriteByte(-1);
+		bfw.WriteByte(true);
+		bfw.WriteString(buffer);
 	}
+	EndMessage();
 
-	return Plugin_Continue;
+	return Plugin_Stop;
 }
