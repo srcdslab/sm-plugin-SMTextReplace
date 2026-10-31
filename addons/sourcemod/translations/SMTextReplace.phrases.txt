@@ -1,0 +1,33 @@
+"Phrases"
+{
+	"Config Reloaded"
+	{
+		"en"		"Reloaded config file."
+		"fr"		"Fichier de configuration rechargé."
+		"ru"		"Файл конфигурации перезагружен."
+		"es"		"Archivo de configuración recargado."
+		"de"		"Konfigurationsdatei neu geladen."
+		"pt"		"Arquivo de configuração recarregado."
+		"chi"		"配置文件已重新加载。"
+	}
+	"Test From Console"
+	{
+		"en"		"Can't see the display results from the server console."
+		"fr"		"Impossible de voir le résultat de l'affichage depuis la console du serveur."
+		"ru"		"Результат отображения нельзя увидеть из консоли сервера."
+		"es"		"No se puede ver el resultado desde la consola del servidor."
+		"de"		"Das Ergebnis kann in der Serverkonsole nicht angezeigt werden."
+		"pt"		"Não é possível ver o resultado no console do servidor."
+		"chi"		"无法在服务器控制台中查看显示效果。"
+	}
+	"Test Message"
+	{
+		"en"		"If you see the prefix colored, it works!"
+		"fr"		"Si vous voyez le préfixe en couleur, ça fonctionne !"
+		"ru"		"Если вы видите цветной префикс, всё работает!"
+		"es"		"¡Si ves el prefijo en color, funciona!"
+		"de"		"Wenn du das Präfix farbig siehst, funktioniert es!"
+		"pt"		"Se você está vendo o prefixo colorido, está funcionando!"
+		"chi"		"如果你看到彩色前缀，说明一切正常！"
+	}
+}
