@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2.3",
+	version = "1.2.4",
 	url = ""
 };
 
@@ -23,6 +23,8 @@ char TextColors[MAXTEXTCOLORS][256];
 
 public void OnPluginStart()
 {
+	LoadTranslations("SMTextReplace.phrases");
+
 	g_cvRandomColor = CreateConVar("sm_textcol_random", "1", "Uses random colors that you defined. 1- random 0-Default");
 
 	RegAdminCmd("sm_reloadstc", Command_ReloadConfig, ADMFLAG_CONFIG, "Reloads Text color's config file");
@@ -38,16 +40,16 @@ public Action Command_ReloadConfig(int client, int args)
 {
 	RefreshConfig();
 	LogAction(client, -1, "Reloaded [SM] Text replacer config file");
-	ReplyToCommand(client, "[STC] Reloaded config file.");
+	ReplyToCommand(client, "[STC] %t", "Config Reloaded");
 	return Plugin_Handled;
 }
 
 public Action Command_Test(int client, int args)
 {
 	if (client < 1)
-		ReplyToCommand(client, "[STC] Can't see the display results from the server console.");
+		ReplyToCommand(client, "[STC] %t", "Test From Console");
 	else
-		PrintToChat(client, "[SM] If you see prefix colored. That works!");
+		PrintToChat(client, "[SM] %t", "Test Message");
 	return Plugin_Handled;
 }
 
