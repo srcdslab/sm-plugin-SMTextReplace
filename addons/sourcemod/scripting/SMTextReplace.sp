@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2.4",
+	version = "1.2.5",
 	url = ""
 };
 
@@ -102,7 +102,6 @@ stock void RefreshConfig()
 			ReplaceString(sBuffer, sizeof(sBuffer), "&", "\x07");
 			CountColors++;
 			strcopy(TextColors[CountColors], sizeof(TextColors[]), sBuffer);
-			PrintToChatAll("\x01%s", sBuffer);
 		}
 	}
 	delete hFile;
