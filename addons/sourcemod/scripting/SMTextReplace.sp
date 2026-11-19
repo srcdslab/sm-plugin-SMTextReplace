@@ -11,7 +11,7 @@ public Plugin myinfo =
 	name = "Default SM Text Replacer",
 	author = "Mitch/Bacardi",
 	description = "Replaces the '[SM]' text with more color!",
-	version = "1.2.6",
+	version = "1.2.7",
 	url = ""
 };
 

@@ -9,6 +9,12 @@
 		"de"		"Konfigurationsdatei neu geladen."
 		"pt"		"Arquivo de configuração recarregado."
 		"chi"		"配置文件已重新加载。"
+		"it"		"File di configurazione ricaricato."
+		"pl"		"Przeładowano plik konfiguracyjny."
+		"tr"		"Yapılandırma dosyası yeniden yüklendi."
+		"ua"		"Файл конфігурації перезавантажено."
+		"zho"		"已重新載入設定檔。"
+		"cze"		"Konfigurační soubor byl znovu načten."
 	}
 	"Test From Console"
 	{
@@ -19,6 +25,12 @@
 		"de"		"Das Ergebnis kann in der Serverkonsole nicht angezeigt werden."
 		"pt"		"Não é possível ver o resultado no console do servidor."
 		"chi"		"无法在服务器控制台中查看显示效果。"
+		"it"		"Impossibile vedere il risultato dalla console del server."
+		"pl"		"Nie można zobaczyć wyniku z konsoli serwera."
+		"tr"		"Sonuç sunucu konsolundan görüntülenemez."
+		"ua"		"Неможливо побачити результат з консолі сервера."
+		"zho"		"無法從伺服器主控台查看顯示結果。"
+		"cze"		"Z konzole serveru nelze zobrazit výsledek."
 	}
 	"Test Message"
 	{
@@ -29,5 +41,11 @@
 		"de"		"Wenn du das Präfix farbig siehst, funktioniert es!"
 		"pt"		"Se você está vendo o prefixo colorido, está funcionando!"
 		"chi"		"如果你看到彩色前缀，说明一切正常！"
+		"it"		"Se vedi il prefisso colorato, funziona!"
+		"pl"		"Jeśli widzisz kolorowy prefiks, to działa!"
+		"tr"		"Önekin renkli olduğunu görüyorsan, çalışıyor!"
+		"ua"		"Якщо ви бачите кольоровий префікс, це працює!"
+		"zho"		"如果你看到前綴有顏色，就表示成功了！"
+		"cze"		"Pokud vidíš barevný prefix, funguje to!"
 	}
 }
